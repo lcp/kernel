@@ -1275,7 +1275,6 @@ static void __setup_root(u32 nodesize, u32 sectorsize, u32 stripesize,
 	else
 		root->defrag_trans_start = 0;
 	root->root_key.objectid = objectid;
-	root->anon_dev = 0;
 
 	spin_lock_init(&root->root_item_lock);
 }
@@ -1572,7 +1571,7 @@ int btrfs_init_fs_root(struct btrfs_root *root)
 	spin_lock_init(&root->ino_cache_lock);
 	init_waitqueue_head(&root->ino_cache_wait);
 
-	ret = get_anon_bdev(&root->anon_dev);
+	ret = insert_anon_sbdev(root->fs_info->sb, &root->sbdev);
 	if (ret)
 		goto free_writers;
 
@@ -1591,7 +1590,7 @@ int btrfs_init_fs_root(struct btrfs_root *root)
 	return 0;
 
 free_root_dev:
-	free_anon_bdev(root->anon_dev);
+	remove_anon_sbdev(&root->sbdev);
 free_writers:
 	btrfs_free_subvolume_writers(root->subv_writers);
 fail:
@@ -3665,8 +3664,8 @@ static void free_fs_root(struct btrfs_root *root)
 	WARN_ON(!RB_EMPTY_ROOT(&root->inode_tree));
 	btrfs_free_block_rsv(root, root->orphan_block_rsv);
 	root->orphan_block_rsv = NULL;
-	if (root->anon_dev)
-		free_anon_bdev(root->anon_dev);
+	if (likely(!test_bit(BTRFS_ROOT_DUMMY_ROOT, &root->state)))
+		remove_anon_sbdev(&root->sbdev);
 	if (root->subv_writers)
 		btrfs_free_subvolume_writers(root->subv_writers);
 	free_extent_buffer(root->node);
