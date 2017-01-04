@@ -1284,6 +1284,14 @@ struct sb_writers {
 #endif
 };
 
+/* we can expand this to help the VFS layer with modern filesystems */
+/* To be used only used by btrfs */
+struct super_block_dev {
+	struct super_block	*sb;
+	struct list_head	entry;		/* For struct sb->s_sbdevs */
+	dev_t			anon_dev;
+};
+
 struct super_block {
 	struct list_head	s_list;		/* Keep this first */
 	dev_t			s_dev;		/* search index; _not_ kdev_t */
@@ -1377,6 +1385,9 @@ struct super_block {
 	 * Indicates how deep in a filesystem stack this SB is
 	 */
 	int s_stack_depth;
+#ifndef __GENKSYMS__
+	struct list_head	s_sbdevs;	/* internal fs dev_t */
+#endif
 };
 
 extern struct timespec current_fs_time(struct super_block *sb);
@@ -1973,6 +1984,11 @@ void deactivate_locked_super(struct super_block *sb);
 int set_anon_super(struct super_block *s, void *data);
 int get_anon_bdev(dev_t *);
 void free_anon_bdev(dev_t);
+
+/* These two are to be used only by btrfs */
+int insert_anon_sbdev(struct super_block *sb, struct super_block_dev *sbdev);
+void remove_anon_sbdev(struct super_block_dev *sbdev);
+
 struct super_block *sget(struct file_system_type *type,
 			int (*test)(struct super_block *,void *),
 			int (*set)(struct super_block *,void *),
