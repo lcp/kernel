@@ -1715,7 +1715,13 @@ struct super_operations {
 				  struct shrink_control *);
 	long (*free_cached_objects)(struct super_block *,
 				    struct shrink_control *);
+#ifndef __GENKSYMS__
+	/*
+	 * Will not even be accessed unless the FS_USES_GET_INODE_DEV flag
+	 * is set in file_system_type.
+	 */
 	dev_t (*get_inode_dev)(const struct inode *);
+#endif
 };
 
 /*
@@ -1926,6 +1932,7 @@ struct file_system_type {
 #define FS_USERNS_VISIBLE	32	/* FS must already be visible */
 #define FS_DENTRY_OP_REAL	64	/* Supports dentry->d_op->d_real. */
 #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */
+#define FS_USES_GET_INODE_DEV	65536 /* FS defines sops->get_inode_dev */
 	struct dentry *(*mount) (struct file_system_type *, int,
 		       const char *, void *);
 	void (*kill_sb) (struct super_block *);
@@ -3013,7 +3020,8 @@ static inline bool dir_relax(struct inode *inode)
 
 static inline dev_t inode_get_dev(const struct inode *inode)
 {
-	if (inode->i_sb->s_op->get_inode_dev)
+	if ((inode->i_sb->s_type->fs_flags & FS_USES_GET_INODE_DEV) &&
+	    inode->i_sb->s_op->get_inode_dev)
 		return inode->i_sb->s_op->get_inode_dev(inode);
 
 	return inode->i_sb->s_dev;
