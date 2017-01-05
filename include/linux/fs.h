@@ -1715,6 +1715,7 @@ struct super_operations {
 				  struct shrink_control *);
 	long (*free_cached_objects)(struct super_block *,
 				    struct shrink_control *);
+	dev_t (*get_inode_dev)(const struct inode *);
 };
 
 /*
@@ -3008,6 +3009,14 @@ static inline bool dir_relax(struct inode *inode)
 	mutex_unlock(&inode->i_mutex);
 	mutex_lock(&inode->i_mutex);
 	return !IS_DEADDIR(inode);
+}
+
+static inline dev_t inode_get_dev(const struct inode *inode)
+{
+	if (inode->i_sb->s_op->get_inode_dev)
+		return inode->i_sb->s_op->get_inode_dev(inode);
+
+	return inode->i_sb->s_dev;
 }
 
 #endif /* _LINUX_FS_H */
