@@ -493,7 +493,7 @@ try_again:
 
 	if (is_udp4) {
 		if (inet->cmsg_flags)
-			ip_cmsg_recv(msg, skb);
+			ip_cmsg_recv_offset(msg, skb, sizeof(struct udphdr));
 	} else {
 		if (np->rxopt.all)
 			ip6_datagram_recv_specific_ctl(sk, msg, skb);
