@@ -205,7 +205,9 @@ struct musb_platform_ops {
 	int	(*adjust_channel_params)(struct dma_channel *channel,
 				u16 packet_sz, u8 *mode,
 				dma_addr_t *dma_addr, u32 *len);
+#ifndef __GENKSYMS__
 	void	(*clear_ep_rxintr)(struct musb *musb, int epnum);
+#endif
 };
 
 /*
