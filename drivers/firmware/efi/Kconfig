@@ -161,6 +161,46 @@ config RESET_ATTACK_MITIGATION
 	  still contains secrets in RAM, booting another OS and extracting the
 	  secrets.
 
+menuconfig SECURITY_VERSION_SUPPORT
+	bool "Security Version Support" if EFI_STUB
+	help
+	   The security version is the number defined by the distribution
+	   to indicate the critical security fixes. The bootloader could
+	   maintain a list of the security versions of the current kernels.
+	   After fixing a severe vulnerability in the kernel, the distribution
+	   bumps the security version to notify the bootloader to update
+	   the list. If the user tries to load a kernel with a smaller security
+	   version, the bootloadr could show a warning to the user to avoid
+	   a vulnerable kernel from being loaded accidentally.
+
+	   This is mainly designed for the distribution kernel maintainer.
+	   Say N if you don't know what it is.
+
+
+config SIGNER_NAME
+	string "Signer Name" if SECURITY_VERSION_SUPPORT
+	depends on EFI && X86
+	default ""
+	help
+	   This option specifies who signs or releases this kernel.
+
+config DISTRO_VERSION
+	int "Distribution Version" if SECURITY_VERSION_SUPPORT
+	depends on EFI && X86
+	default 0
+	range 0 4294967295
+	help
+	  This option specifies the distribution version which this
+	  kernel belongs to.
+
+config SECURITY_VERSION
+	int "Security Version" if SECURITY_VERSION_SUPPORT
+	depends on EFI && X86
+	default 0
+	range 0 65535
+	help
+	   This option specifies the security version of this kernel.
+
 endmenu
 
 config UEFI_CPER

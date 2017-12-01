@@ -188,7 +188,12 @@ extra_header_fields:
 
 	.quad	0				# ExportTable
 	.quad	0				# ImportTable
+#ifdef CONFIG_SECURITY_VERSION_SUPPORT
+	.long	rsrc_table			# ResourceTable
+	.long	rsrc_table_size
+#else
 	.quad	0				# ResourceTable
+#endif
 	.quad	0				# ExceptionTable
 	.quad	0				# CertificationTable
 	.quad	0				# BaseRelocationTable
@@ -634,3 +639,53 @@ die:
 setup_corrupt:
 	.byte	7
 	.string	"No setup signature found...\n"
+
+#ifdef CONFIG_SECURITY_VERSION_SUPPORT
+# Resource Table
+	.section ".rodata", "a", @progbits
+	.align	2
+rsrc_table:
+	# Resource Directory
+	.long	0				# Characteristics
+	.long	0				# TimeDateStamp
+	.short	0				# MajorVersion
+	.short	0				# MinorVersion
+	.short	1				# NumberOfNamedEntries
+	.short	0				# NumberOfIdEntries
+
+	# Resource Directory Entry
+	.long	name_offset | 0x80000000	# NameOffset:31
+						# NameIsString:1
+	.long	rsrc_data_entry - rsrc_table	# OffsetToData
+
+	.set	name_offset, . - rsrc_table
+	# Resource Directory String
+	.short	7				# Length
+	.short	0x4C00				# 'L'
+	.short	0x6900				# 'i'
+	.short	0x6E00				# 'n'
+	.short	0x7500				# 'u'
+	.short	0x7800				# 'x'
+	.short	0x5300				# 'S'
+	.short	0x5600				# 'V'
+
+	.set	svdata_entry_offset, . - rsrc_table
+	# Resource Data Entry
+rsrc_data_entry:
+	.long	svdata_begin			# OffsetToData
+	.long	svdata_end - svdata_begin	# Size
+	.long	0				# CodePage
+	.long	0				# Reserved
+
+	.set	rsrc_table_size, . - rsrc_table
+
+	# Security Version
+svdata_begin:
+	.short	sv_signer - svdata_begin
+	.short	CONFIG_SECURITY_VERSION
+	.long	CONFIG_DISTRO_VERSION
+sv_signer:
+	.string	CONFIG_SIGNER_NAME
+svdata_end:
+
+#endif /* CONFIG_SECURITY_VERSION_SUPPORT */
