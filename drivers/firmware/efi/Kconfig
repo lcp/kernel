@@ -179,14 +179,14 @@ menuconfig SECURITY_VERSION_SUPPORT
 
 config SIGNER_NAME
 	string "Signer Name" if SECURITY_VERSION_SUPPORT
-	depends on EFI && X86
+	depends on EFI && (X86 || ARM64)
 	default ""
 	help
 	   This option specifies who signs or releases this kernel.
 
 config DISTRO_VERSION
 	int "Distribution Version" if SECURITY_VERSION_SUPPORT
-	depends on EFI && X86
+	depends on EFI && (X86 || ARM64)
 	default 0
 	range 0 4294967295
 	help
@@ -195,7 +195,7 @@ config DISTRO_VERSION
 
 config SECURITY_VERSION
 	int "Security Version" if SECURITY_VERSION_SUPPORT
-	depends on EFI && X86
+	depends on EFI && (X86 || ARM64)
 	default 0
 	range 0 65535
 	help
